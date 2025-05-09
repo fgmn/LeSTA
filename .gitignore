@@ -19,5 +19,5 @@ libs/
 *.bag
 
 # Ignore model files
-*.pth
-*.pt
+# *.pth
+# *.pt
