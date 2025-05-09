@@ -115,7 +115,7 @@ void TraversabilityEstimator::estimateTraversabilityImpl(
 
   // Perform batch inference if we have valid cells
   if (!features.empty()) {
-    std::vector<float> predictions = network_.inference(features);
+    std::vector<float> predictions = network_.inference(features);//推理
 
     // Update map with predictions
     for (size_t i = 0; i < valid_indices.size(); ++i) {

@@ -15,7 +15,7 @@ namespace lesta {
 FeatureExtractor::FeatureExtractor(const Config &cfg) : cfg(cfg) {}
 
 void FeatureExtractor::ensureFeatureLayers(HeightMap &map) {
-
+  //对应论文中的Terrain Attributes
   // Basic feature layers
   map.addLayer(layers::Feature::STEP);
   map.addLayer(layers::Feature::SLOPE);
@@ -37,7 +37,7 @@ void FeatureExtractor::extractFeatures(HeightMap &map) {
 void FeatureExtractor::extractFeatures(
     HeightMap &map,
     const std::vector<grid_map::Index> &measured_indices) {
-
+  //measured_indices：一个索引列表，包含了本帧“有效”被测量到的栅格位置。
   ensureFeatureLayers(map);
 
   for (const auto &index : measured_indices) {
@@ -76,12 +76,14 @@ void FeatureExtractor::extractFeatures(
 
     // Check direction of the normal vector and flip the sign towards the user defined
     // direction.
+    //最小特征值对应的特征向量（col(0)）即最优法向方向。
     Eigen::Vector3d normal_vector = eigenvectors.col(0);
     Eigen::Vector3d positive_normal_vector(Eigen::Vector3d::UnitZ());
     if (normal_vector.dot(positive_normal_vector) < 0.0)
       normal_vector *= -1;
 
     // Calculate step
+    //用 maxZ - minZ 表示区间的高差，反映该点周围地形是否有台阶或高度突变。
     auto minMax =
         std::minmax_element(neighbors.begin(),
                             neighbors.end(),

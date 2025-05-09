@@ -58,7 +58,7 @@ public:
                              point.y - sensorOrigin.y(),
                              point.z - sensorOrigin.z());
       float rayLength = rayDir.norm();
-      rayDir.normalize();
+      rayDir.normalize();//得到方向向量
 
       // Visibility check through ray
       float samplingStep = map.getResolution();
@@ -75,6 +75,8 @@ public:
           continue;
 
         // Do not erase the static obstacles
+        //如果此格子有直接观测值且高出当前射线点 pointOnRay.z() + 0.1（0.1m 容差），
+        //说明这里可能有静态障碍（高墙、树干等），则中断本条射线的进一步检查，不对其之后格子做任何删除或修正。
         auto &scanHeight = scanHeightMatrix(checkIndex(0), checkIndex(1));
         if (std::isfinite(scanHeight) && scanHeight > pointOnRay.z() + 0.1)
           break;
@@ -93,6 +95,8 @@ public:
           rayHeight = pointOnRay.z();
 
         // Update height if current height is higher than the ray point
+        //如果当前高度估计 mapHeight 明显高于射线点 pointOnRay.z()（加一个小阈值 correctionThreshold_），
+        //则认为先前的高度可能是因为动态障碍（如行人、车辆）造成的过高估计，需要纠正。
         if (mapHeight > pointOnRay.z() + correctionThreshold_) {
           mapHeightVariance += (mapHeight - pointOnRay.z()); // Increase variance
           nPoints = 1;                                       // Reset nPoints

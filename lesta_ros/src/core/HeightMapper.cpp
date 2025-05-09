@@ -75,6 +75,7 @@ typename boost::shared_ptr<pcl::PointCloud<PointT>> HeightMapper::heightMapping(
     const typename boost::shared_ptr<pcl::PointCloud<PointT>> &cloud) {
 
   // 1. Rasterize pointcloud
+  //栅格化
   auto cloud_rasterized = cloudRasterization<PointT>(cloud, cfg.grid_resolution);
   if (cloud_rasterized->empty()) {
     std::cout << "\033[1;31m[height_mapping::HeightMapper]: Height estimation failed. "
@@ -99,7 +100,7 @@ template <typename PointT>
 typename pcl::PointCloud<PointT>::Ptr
 HeightMapper::cloudRasterization(const typename pcl::PointCloud<PointT>::Ptr &cloud,
                                  float gridSize) {
-
+  //在每个二维格子里，仅保留 z 值最大的点，从而近似地保留地形的“峰值”信息。
   if (cloud->empty()) {
     return cloud;
   }
@@ -113,7 +114,7 @@ HeightMapper::cloudRasterization(const typename pcl::PointCloud<PointT>::Ptr &cl
     auto grid_key = std::make_pair(x_index, y_index);
     auto [iter, inserted] = grid_map.try_emplace(grid_key, point);
 
-    if (!inserted && point.z > iter->second.z) {
+    if (!inserted && point.z > iter->second.z) {//保留的是高度最大的那一个点
       iter->second = point;
     }
   }

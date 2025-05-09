@@ -130,12 +130,14 @@ void LabelGenerationNode::lidarScanCallback(const sensor_msgs::PointCloud2Ptr &m
   pcl::moveFromROSMsg(*msg, *scan_raw);
 
   // 3. Preprocess scan data: ready for terrain mapping
+  //返回map坐标下的点云数据
   auto scan_preprocessed = preprocessScan(scan_raw, sensor2base, base2map);
   if (!scan_preprocessed)
     return;
 
   // 4. Terrain mapping: sensor position is required for raycasting
   auto sensor2map = TransformOps::multiplyTransforms(sensor2base, base2map);
+  //传感器在map系下的坐标
   Eigen::Vector3f sensor_position3d(sensor2map.transform.translation.x,
                                     sensor2map.transform.translation.y,
                                     sensor2map.transform.translation.z);
@@ -145,6 +147,7 @@ void LabelGenerationNode::lidarScanCallback(const sensor_msgs::PointCloud2Ptr &m
   feature_extractor_->extractFeatures(mapper_->getHeightMap(), measured_indices);
 
   // 6. Record non-traversable regions
+  //打标签
   label_generator_->addObstacles(mapper_->getHeightMap(), measured_indices);
 }
 
@@ -154,6 +157,7 @@ LabelGenerationNode::preprocessScan(const pcl::PointCloud<Laser>::Ptr &scan_raw,
                                     const geometry_msgs::TransformStamped &base2map) {
 
   // 1. Transform pointcloud to base frame
+  //将点云从传感器局部坐标系统一到机器人基座坐标系，便于后续以机器人为参考进行滤波和裁剪。
   auto scan_base = PointCloudOps::applyTransform<Laser>(scan_raw, sensor2base);
 
   // For visualization: downsample pointcloud
@@ -165,6 +169,7 @@ LabelGenerationNode::preprocessScan(const pcl::PointCloud<Laser>::Ptr &scan_raw,
   mapper_->fastHeightFilter(scan_base, scan_preprocessed);
 
   // 3. Pass through filter
+  //保留10m×10m范围内的点云数据
   scan_preprocessed =
       PointCloudOps::passThrough<Laser>(scan_preprocessed, "x", -5.0, 5.0);
   scan_preprocessed =
@@ -197,6 +202,7 @@ LabelGenerationNode::terrainMapping(const pcl::PointCloud<Laser>::Ptr &cloud_inp
   publishRasterizedScan(cloud_rasterized);
 
   // 3. Raycasting to remove dynamic obstacles
+  //移除动态障碍物
   mapper_->raycasting(sensor_origin, cloud_rasterized);
 
   // 4. Get measured indices

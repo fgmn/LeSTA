@@ -129,6 +129,7 @@ void TravPredictionNode::lidarScanCallback(const sensor_msgs::PointCloud2Ptr &ms
   feature_extractor_->extractFeatures(mapper_->getHeightMap(), measured_indices);
 
   // 6. Traversability estimation
+  //根据特征进行网络推理
   trav_estimator_->estimateTraversability(mapper_->getHeightMap(), measured_indices);
 
   // 7. Publish maps
